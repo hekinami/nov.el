@@ -554,6 +554,7 @@ the HTML is rendered with `nov-render-html-function'."
   (let ((index (nov-find-document (lambda (doc) (eq (car doc) nov-toc-id)))))
     (when (not index)
       (error "Couldn't locate TOC"))
+    (push (cons nov-documents-index (point)) nov-browse-history)
     (setq nov-documents-index index)
     (nov-render-document)))
 
