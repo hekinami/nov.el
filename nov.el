@@ -493,7 +493,8 @@ chapter title."
         (shr-use-fonts nov-variable-pitch))
     ;; HACK: `shr-external-rendering-functions' doesn't cover
     ;; every usage of `shr-tag-img'
-    (cl-letf (((symbol-function 'shr-tag-img) 'nov-render-img))
+    (cl-letf (((symbol-function 'shr-tag-img) 'nov-render-img)
+              ((symbol-function 'shr--remove-blank-lines-at-the-end) (lambda (beg end))))
       (if (eq nov-text-width t)
           (cl-letf (((symbol-function 'shr-fill-line) 'ignore))
             (shr-render-region (point-min) (point-max)))
