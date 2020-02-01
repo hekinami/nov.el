@@ -124,6 +124,9 @@ Each alist item consists of the identifier and full path.")
 (defvar-local nov-documents-index 0
   "Index of the currently rendered document in the EPUB buffer.")
 
+(defvar-local nov-browse-history nil
+  "The history of browsing via links.")
+
 (defvar-local nov-toc-id nil
   "TOC identifier of the EPUB buffer.")
 
@@ -382,6 +385,7 @@ Each alist item consists of the identifier and full path."
     (define-key map (kbd "[") 'nov-previous-document)
     (define-key map (kbd "t") 'nov-goto-toc)
     (define-key map (kbd "RET") 'nov-browse-url)
+    (define-key map (kbd "l") 'nov-browse-back)
     (define-key map (kbd "<follow-link>") 'mouse-face)
     (define-key map (kbd "<mouse-2>") 'nov-browse-url)
     (define-key map (kbd "TAB") 'shr-next-link)
@@ -598,6 +602,7 @@ the HTML is rendered with `nov-render-html-function'."
   "Go to the next document and render it."
   (interactive)
   (when (< nov-documents-index (1- (length nov-documents)))
+    (push (cons nov-documents-index (point)) nov-browse-history)
     (setq nov-documents-index (1+ nov-documents-index))
     (nov-render-document)))
 
@@ -605,6 +610,7 @@ the HTML is rendered with `nov-render-html-function'."
   "Go to the previous document and render it."
   (interactive)
   (when (> nov-documents-index 0)
+    (push (cons nov-documents-index (point)) nov-browse-history)
     (setq nov-documents-index (1- nov-documents-index))
     (nov-render-document)))
 
@@ -653,9 +659,22 @@ Internal URLs are visited with `nov-visit-relative-file'."
   (let ((url (get-text-property (point) 'shr-url)))
     (when (not url)
       (user-error "No link under point"))
+    (push (cons nov-documents-index (point)) nov-browse-history)
     (if (nov-external-url-p url)
         (browse-url url)
       (apply 'nov-visit-relative-file (nov-url-filename-and-target url)))))
+
+(defun nov-browse-back ()
+  "Go back to last position."
+  (interactive)
+  (let* ((position (pop nov-browse-history))
+         (idx (car position))
+         (point (cdr position)))
+    (when (not idx)
+      (user-error "No history"))
+    (setq nov-documents-index idx)
+    (nov-render-document)
+    (goto-char point)))
 
 (defun nov-saved-places ()
   "Retrieve saved places in `nov-save-place-file'."
